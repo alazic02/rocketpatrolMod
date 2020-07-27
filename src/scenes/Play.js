@@ -5,33 +5,31 @@ class Play extends Phaser.Scene {
 
     preload () {
         // load images/tile sprites
-        this.load.image('rocket', './assets/rocket.png'); //rocket
-        this.load.image('spaceship', './assets/spaceship.png'); //spaceships
-        this.load.image('starfield', './assets/starfield.png'); //starfield bg
+        this.load.image('clam', './assets/clam.png'); //clam
+        this.load.image('squid', './assets/squid.png'); //spaceships
+        this.load.image('ocean', './assets/ocean.png'); //starfield bg
        
-        this.load.spritesheet('explosion', './assets/explosion.png', {frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9}); //explosion animation; {} part = frame configuration object: tells Phaser number of frames (here 0-9), pixel height+width
+        this.load.spritesheet('bubbleBurst', './assets/bubbleBurst.png', {frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9}); //explosion animation; {} part = frame configuration object: tells Phaser number of frames (here 0-9), pixel height+width
 
     }
 
     create () {
         // place tile sprite bg
-        this.starfield = this.add.tileSprite(0, 0, 620, 480, 'starfield').setOrigin(0, 0);
+        this.ocean = this.add.tileSprite(0, 0, 620, 480, 'ocean').setOrigin(0, 0);
 
-        // white rectangle borders
-        this.add.rectangle(5, 5, 630, 32, 0xFFFFFF).setOrigin(0, 0);
-        this.add.rectangle(5, 443, 630, 32, 0xFFFFFF).setOrigin(0, 0);
-        this.add.rectangle(5, 5, 32, 455, 0xFFFFFF).setOrigin(0, 0);
-        this.add.rectangle(603, 5, 32, 455, 0xFFFFFF).setOrigin(0, 0);
-        //green UI bg
-        this.add.rectangle(37, 42, 566, 64, 0x00FF00).setOrigin(0, 0);
+        //rectangle borders
+        this.add.rectangle(0, 0, 40, 480, 0xAFF8FF, {alpha: 0.75}).setOrigin(0, 0); //left
+        this.add.rectangle(600, 0, 40, 480, 0xAFF8FF, {alpha: 0.75}).setOrigin(0, 0); //right
+        //UI bg
+        this.add.rectangle(40, 44, 560, 64, 0xC57FFF).setOrigin(0, 0);
 
         // add rocket (p1)
-        this.p1Rocket = new Rocket(this, game.config.width/2, 431, 'rocket', 0).setScale(0.5, 0.5).setOrigin(0, 0);
+        this.p1Rocket = new Clam(this, game.config.width/2, 460, 'clam', 0).setScale(0.5, 0.5).setOrigin(0, 0);
 
         //add spaceships (x3)
-        this.ship01 = new Spaceship(this, game.config.width + 192, 132, 'spaceship', 0, 30).setOrigin(0, 0);
-        this.ship02 = new Spaceship(this, game.config.width + 96, 196, 'spaceship', 0, 20).setOrigin(0, 0);
-        this.ship03 = new Spaceship(this, game.config.width, 268, 'spaceship', 0, 10).setOrigin(0, 0);
+        this.ship01 = new Squid(this, game.config.width + 192, 132, 'squid', 0, 30).setOrigin(0, 0);
+        this.ship02 = new Squid(this, game.config.width + 96, 196, 'squid', 0, 20).setOrigin(0, 0);
+        this.ship03 = new Squid(this, game.config.width, 268, 'squid', 0, 10).setOrigin(0, 0);
 
         //define keys
         keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
@@ -40,19 +38,20 @@ class Play extends Phaser.Scene {
 
         //animation configuration
         this.anims.create( {
-            key: 'explode',
-            frames: this.anims.generateFrameNumbers('explosion', {start: 0, end: 9, first: 0}),
+            key: 'bubbleBurst',
+            frames: this.anims.generateFrameNumbers('bubbleBurst', {start: 0, end: 9, first: 0}),
             frameRate: 30
         });
 
         //score
         this.p1Score = 0;
+
         //text display
         let scoreConfig = {
-            fontFamily: 'Courier',
+            fontFamily: 'Comic Sans MS',
             fontSize: '28px',
-            backgroundColor: '#F3B141',
-            color: '#843605',
+            backgroundColor: '#E1EBEB',
+            color: '#326085',
             align: 'right',
             padding: {
                 top: 5,
@@ -67,7 +66,7 @@ class Play extends Phaser.Scene {
         //game over flag
         this.gameOver = false;
 
-        //60-second play clock
+        //timer
         scoreConfig.fixedWidth = 0;
         this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
             //calls function after delay; time in milliseconds
@@ -78,6 +77,16 @@ class Play extends Phaser.Scene {
         null, //callback
         this, //callback context; here means Play scene
         );
+
+        //countdown
+        this.time.addEvent (
+            {loop: true, callback: this.countdown,
+            callbackScope: this,
+            delay: 1000}
+        )
+        //time display
+        this.timeLeft = game.settings.gameTimer/1000;
+        this.timeLeftDisp = this.add.text(464, 54, "Time: " + this.timeLeft, scoreConfig);
     }
 
     update () {
@@ -91,7 +100,7 @@ class Play extends Phaser.Scene {
         }
 
         // scroll tile sprite
-        this.starfield.tilePositionX -= 4;
+        this.ocean.tilePositionX -= 1.75;
 
         //allows rocket/ship movement only when NOT game over
         if (!this.gameOver) {
@@ -117,14 +126,15 @@ class Play extends Phaser.Scene {
             this.p1Rocket.reset();
             this.shipExplode(this.ship01);
         }
+
     }
 
-    checkCollision(rocket, ship) {
+    checkCollision(clam, squid) {
         //simple AABB checking
-        if( rocket.x < ship.x + ship.width &&
-            rocket.x + rocket.width > ship.x &&
-            rocket.y < ship.y + ship.height &&
-            rocket.height + rocket.y > ship.y) {
+        if( clam.x < squid.x + squid.width &&
+            clam.x + clam.width > squid.x &&
+            clam.y < squid.y + squid.height &&
+            clam.height + clam.y > squid.y) {
                 return true;
         }
         else {
@@ -135,9 +145,9 @@ class Play extends Phaser.Scene {
     shipExplode(ship) {
         ship.alpha = 0; //temporarily hide ship (opacity set to 0)
 
-        //create explosion sprite at ship's position
-        let boom = this.add.sprite(ship.x, ship.y, 'explosion').setOrigin(0, 0);
-            boom.anims.play('explode'); // play explode animation: calls key
+        //create explosion animation at ship's position
+        let boom = this.add.sprite(ship.x, ship.y, 'bubbleBurst').setOrigin(0, 0);
+            boom.anims.play('bubbleBurst'); // play explode animation: calls key
             boom.on('animationcomplete', () => { //callback after animation completes
                 ship.reset(); //reset ship position
                 ship.alpha = 1; //make ship visible again
@@ -150,7 +160,30 @@ class Play extends Phaser.Scene {
         this.scoreLeft.text = this.p1Score;
 
         //explosion sound
-        this.sound.play('sfx_explosion');
+        //choose random SFX
+        this.randSFX = Phaser.Math.Between(0, 3);
+        switch (this.randSFX) {
+            case 0: this.sound.play("sfx_burst");
+            break;
+            case 1: this.sound.play("sfx_burst2");
+            break;
+            case 2: this.sound.play("sfx_burst3");
+            break;
+            case 3: this.sound.play("sfx_burst4");
+            break;
+            default: break;
+        }
     }
 
+    //time countdown
+    countdown() {
+        if (this.timeLeft > 0) {
+            this.timeLeft--;
+        }
+        this.timeLeftDisp.text = "Time: " + this.timeLeft;
+        //speed increase
+        if (this.timeLeft == 30) {
+            game.settings.spaceshipSpeed = (game.settings.spaceshipSpeed + 2);
+        }
+    }
 }
