@@ -182,7 +182,7 @@ class Play extends Phaser.Scene {
         }
         this.timeLeftDisp.text = "Time: " + this.timeLeft;
         //speed increase
-        if (this.timeLeft == 30) {
+        if (this.timeLeft == (game.settings.gameTimer/1000) - 30) {
             game.settings.spaceshipSpeed = (game.settings.spaceshipSpeed + 2);
         }
     }

@@ -7,7 +7,7 @@ class Clam extends Phaser.GameObjects.Sprite {
         scene.add.existing(this);
 
         //rocket sound
-        this.sfxRocket = scene.sound.add('sfx_clam', {volume: 0.75});
+        this.sfxRocket = scene.sound.add('sfx_clam', {volume: 0.5});
     }
 
     update() {

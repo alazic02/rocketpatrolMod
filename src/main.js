@@ -1,3 +1,12 @@
+//Ariana Lazich; UCSC Summer 2020; CMPM 120
+//------------------------------------------
+//POINTS BREAKDOWN
+//10pts --> 30sec speed increase
+//10pts --> allow player control after fired
+//15pts --> 4x random explosion SFX
+//15pts --> display time
+//50pts --> art + UI redesign
+
 //create game configuration object
 let config = {
     type: Phaser.CANVAS,
@@ -18,11 +27,3 @@ game.settings = {
 
 // reserve some keyboard bindings
 let keyF, keyLEFT, keyRIGHT;
-
-
-//POINTS BREAKDOWN
-//10pts --> 30sec speed increase
-//10pts --> allow player control after fired
-//15pts --> 4x random explosion SFX
-//15pts --> display time
-//50pts --> art + UI redesign
